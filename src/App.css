@@ -1,6 +1,7 @@
 .App {
   text-align: center;
   background-color: #1E1E1E;
+  height: 100vh;
 }
 
 .App-logo {
@@ -33,15 +34,4 @@
   }
 }
 
-.calc-container {
-  display: flex;
-  align-items: flex-end;
-}
 
-button {
-  border-radius: 100px;
-}
-
-#zero {
-
-}
