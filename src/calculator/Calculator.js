@@ -8,11 +8,13 @@ export class Calculator extends Component {
         input: "",
         prevNum: "",
         currentNum: "",
-        operator: "-"
+        operator: "-",
+        opStack: [],
+        postfixStack: [],
     };
 
     addToInput = val => {
-        if (!isNaN(this.state.input) || this.state.input === ".") {
+        // if (!isNaN(this.state.input) || this.state.input === ".") {
             if (this.state.input === "0") {
                 this.setState({
                     input: val
@@ -21,7 +23,7 @@ export class Calculator extends Component {
             this.setState({
                 input: this.state.input + val,
             })
-        }
+        // }
     }
     addZero = val => {
         if (!isNaN(this.state.input)) {
@@ -48,17 +50,17 @@ export class Calculator extends Component {
         })
     }
 
-    plusMinus = () => {
-        if (this.state.input > 0) {
-            this.setState({
-                input: -Math.abs(this.state.input)
-            })
-        } else if (this.state.input < 0) {
-            this.setState({
-                input: Math.abs(this.state.input)
-            })
-        }
-    }
+    // plusMinus = () => {
+    //     if (this.state.input > 0) {
+    //         this.setState({
+    //             input: -Math.abs(this.state.input)
+    //         })
+    //     } else if (this.state.input < 0) {
+    //         this.setState({
+    //             input: Math.abs(this.state.input)
+    //         })
+    //     }
+    // }
 
     trigFunction = val => {
         if (!isNaN(this.state.input) || this.state.input === ".") {
@@ -78,37 +80,83 @@ export class Calculator extends Component {
         }
     }
 
-    operate = val => {
-        if (!isNaN(this.state.input)) {
-            this.state.prevNum = this.state.input;
-            this.state.operator = val;
-            this.setState({
-                input: ""
-            });
-        }
-    }
+    // operate = val => {
+    //     if (!isNaN(this.state.input)) {
+    //         this.state.prevNum = this.state.input;
+    //         this.state.operator = val;
+    //         // this.setState({
+    //         //     input: ""
+    //         // });
+    //     }
+    // }
 
     compute = () => {
-        this.state.currentNum = this.state.input;
-        if (this.state.operator === "+") {
-            this.setState({
-                input: parseInt(this.state.prevNum) + parseInt(this.state.currentNum),
-            })
-        } else if (this.state.operator === "-") {
-            this.setState({
-                input: parseInt(this.state.prevNum) - parseInt(this.state.currentNum)
-            })
-
-        } else if (this.state.operator === "*") {
-            this.setState({
-                input: parseInt(this.state.prevNum) * parseInt(this.state.currentNum)
-            })
-        } else if (this.state.operator === "/") {
-            this.setState({
-                input: parseInt(this.state.prevNum) / parseInt(this.state.input)
-            })
+        for (let i = 0; i < this.state.input.length; i++) {
+            let character = this.state.input.charAt(i);
+            if (character >= "0" && character <= "9") {
+                this.state.postfixStack.push(character);
+                console.log("postfix", this.state.postfixStack);
+            } else if (character === "(") {
+                this.state.opStack.push(character);
+            } else if (character === ")") {
+                while (this.state.opStack[this.state.opStack.length-1] !== "(" && this.state.opStack.length > 0) {
+                    this.state.postfixStack.push(this.state.opStack.pop());
+                }
+                if (this.state.opStack[this.state.opStack.length-1] === "(") {
+                    this.state.opStack.pop();
+                }
+            }
+             else if (character === "+" || character === "-") {
+                while (this.state.opStack.length > 0 && this.state.opStack[this.state.opStack.length-1] !== "(") {
+                    this.state.postfixStack.push(this.state.opStack.pop())
+                }
+                this.state.opStack.push(character);
+            } else if (character === "*" || character === "/") {
+                if (this.state.opStack.length === 0 || this.state.opStack[this.state.opStack.length-1] === "+" || this.state.opStack[this.state.opStack.length-1] === "-" || this.state.opStack[this.state.opStack.length-1] === "(") {
+                    this.state.opStack.push(character);
+                } else {
+                    while (this.state.opStack.length > 0 && this.state.opStack[this.state.opStack.length-1] != "(") {
+                        this.state.postfixStack.push(this.state.opStack.pop())
+                    }
+                    this.state.opStack.push(character);
+                }
+            }
+           
+            //     if (character === "*" || character === "/") {
+            //         while (this.state.opStack.length > 0 && this.state.opStack[this.state.opStack.length-1] ) {
+            //     }
+            //     while (this.state.opStack.length > 0) {
+            //      && (this.state.opStack[this.state.opStack.length-1] === "+" || this.state.opStack[this.state.opStack.length-1] === "-")) {
+            //         this.state.opStack.push(character);
+            //     } 
+            // }
+            // }
         }
-        console.log(this.state.prevNum, this.state.currentNum)
+        while (this.state.opStack.length > 0) {
+            this.state.postfixStack.push(this.state.opStack.pop());
+        }
+        console.log(this.state.postfixStack);
+
+        // this.state.currentNum = this.state.input;
+        // if (this.state.operator === "+") {
+        //     this.setState({
+        //         input: parseInt(this.state.prevNum) + parseInt(this.state.currentNum),
+        //     })
+        // } else if (this.state.operator === "-") {
+        //     this.setState({
+        //         input: parseInt(this.state.prevNum) - parseInt(this.state.currentNum)
+        //     })
+
+        // } else if (this.state.operator === "*") {
+        //     this.setState({
+        //         input: parseInt(this.state.prevNum) * parseInt(this.state.currentNum)
+        //     })
+        // } else if (this.state.operator === "/") {
+        //     this.setState({
+        //         input: parseInt(this.state.prevNum) / parseInt(this.state.input)
+        //     })
+        // }
+        // console.log(this.state.prevNum, this.state.currentNum)
 
     }
 
@@ -119,20 +167,20 @@ export class Calculator extends Component {
         <div id="input">{this.state.input}</div>
         </div>
         <div className="row">
-          <div className="col">
-          <Button className="controls" handleClick={this.clearInput}>C</Button>
+          <div className="col-zero">
+          <Button className="controls" handleClick={this.clearInput}>Clear</Button>
           </div>
           <div className="col">
-          <Button className="controls">(</Button>
+          <Button className="controls" handleClick={this.addToInput}>(</Button>
           </div>
           <div className="col">
-          <Button className="controls">)</Button>
+          <Button className="controls" handleClick={this.addToInput}>)</Button>
           </div>   
-          <div className="col">
+          {/* <div className="col">
           <Button className="controls" handleClick={this.plusMinus}>+/-</Button>
-          </div>
+          </div> */}
           <div className="col">
-          <Button className="operators" handleClick={this.operate}>/</Button>
+          <Button className="operators" handleClick={this.addToInput}>/</Button>
           </div>
         </div>
         
@@ -150,7 +198,7 @@ export class Calculator extends Component {
           <Button className="numbers" handleClick={this.addToInput}>9</Button>
           </div>
           <div className="col">
-          <Button className="operators" handleClick={this.operate}>*</Button>
+          <Button className="operators" handleClick={this.addToInput}>*</Button>
           </div>
         </div>
 
@@ -168,7 +216,7 @@ export class Calculator extends Component {
           <Button className="numbers" handleClick={this.addToInput}>6</Button>
           </div>
           <div className="col">
-          <Button className="operators" handleClick={this.operate}>-</Button>
+          <Button className="operators" handleClick={this.addToInput}>-</Button>
           </div>
         </div>
          <div className="row">
@@ -185,7 +233,7 @@ export class Calculator extends Component {
           <Button className="numbers" handleClick={this.addToInput}>3</Button>
           </div>
           <div className="col">
-          <Button className="operators" handleClick={this.operate}>+</Button>
+          <Button className="operators" handleClick={this.addToInput}>+</Button>
           </div>
         </div>
 
@@ -193,8 +241,8 @@ export class Calculator extends Component {
         <div className="col">
         <img src={logo} className="App-logo" alt="logo" />          
         </div>
-          <div id="col-zero">
-          <Button className="numbers" id="zero" handleClick={this.addToInput}>0</Button>
+          <div className="col-zero">
+          <Button className="numbers" handleClick={this.addToInput}>0</Button>
           </div>
           <div className="col">
           <Button className="numbers" handleClick={this.addDecimal}>.</Button>

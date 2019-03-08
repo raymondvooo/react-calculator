@@ -29,7 +29,7 @@
     flex: 1;
   }
   
-  #col-zero {
+  .col-zero {
     display:flex;
     flex-direction: column;
     flex-basis: 100%;
