@@ -28,7 +28,12 @@ export class Calculator extends Component {
                 })
             }
             //checks if current equation = "0", if it does, then input replaces the 0.
-        } else if (this.state.input == "0") {
+        } else if (val === "sin" || val === "cos" || val === "tan") {
+            this.setState({
+                input: this.state.input + val + '('
+            });
+        } 
+        else if (this.state.input == "0") {
             this.setState({
                 input: val
             })
@@ -61,34 +66,31 @@ export class Calculator extends Component {
             equationSolved: false,
         })
     }
-    /**
-     * handles trig functions. calculator computes the input first and after promise changes state,
-     * calculator performs the trig function on the result
-     */
-    trigFunction = val => {
-        let computePromise = new Promise((resolve, reject) => {
-            this.compute();
-            resolve();
-        });
-        computePromise.then(() => {
-            console.log("trig func started", this.state.input)
-            if (!isNaN(this.state.input)) {
-                if (val === "sin") {
-                    this.setState({
-                        input: Math.sin(this.state.input)
-                    })
-                } else if (val === "cos") {
-                    this.setState({
-                        input: Math.cos(this.state.input)
-                    })
-                } else if (val === "tan") {
-                    this.setState({
-                        input: Math.tan(this.state.input)
-                    })
-                }
-            }
-        })
-    }
+  
+    // trigFunction = val => {
+    //     let computePromise = new Promise((resolve, reject) => {
+    //         this.compute();
+    //         resolve();
+    //     });
+    //     computePromise.then(() => {
+    //         console.log("trig func started", this.state.input)
+    //         if (!isNaN(this.state.input)) {
+    //             if (val === "sin") {
+    //                 this.setState({
+    //                     input: Math.sin(this.state.input)
+    //                 })
+    //             } else if (val === "cos") {
+    //                 this.setState({
+    //                     input: Math.cos(this.state.input)
+    //                 })
+    //             } else if (val === "tan") {
+    //                 this.setState({
+    //                     input: Math.tan(this.state.input)
+    //                 })
+    //             }
+    //         }
+    //     })
+    // }
 
     compute = () => {
         if (this.state.equationSolved === false) {
@@ -144,38 +146,73 @@ export class Calculator extends Component {
             //when '(' encountered, push it on stack
             if (character === "(") {
                 opStack.push(character);
-            } 
+            }
             //if ')', pop operators into postfix queue until '(' encountered
             else if (character === ")") {
-                while (opStack[opStack.length-1] !== "(" && opStack.length > 0) {
+                while (opStack[opStack.length - 1] !== "(" && opStack.length > 0) {
                     postfixStack.push(opStack.pop());
                 }
-                if (opStack[opStack.length-1] === "(") {
+                if (opStack[opStack.length - 1] === "(") {
                     opStack.pop();
                 }
             }
             //checks for operator in infix expression and pops operators from stack based on priority of operator
-             else if (character === "+" || character === "-") {
-                while (opStack.length > 0 && opStack[opStack.length-1] !== "(") {
+            else if (character === "+" || character === "-") {
+                while (opStack.length > 0 && opStack[opStack.length - 1] !== "(") {
                     postfixStack.push(opStack.pop())
                 }
                 opStack.push(character);
             } else if (character === "*" || character === "/") {
-                if (opStack.length === 0 || opStack[opStack.length-1] === "+" || opStack[opStack.length-1] === "-" || opStack[opStack.length-1] === "(") {
+                if (opStack.length === 0 || opStack[opStack.length - 1] === "+" || opStack[opStack.length - 1] === "-" || opStack[opStack.length - 1] === "(") {
                     opStack.push(character);
                 } else {
-                    while (opStack.length > 0 && opStack[opStack.length-1] !== "(") {
+                    while (opStack.length > 0 && opStack[opStack.length - 1] !== "(") {
                         postfixStack.push(opStack.pop())
                     }
                     opStack.push(character);
                 }
+            } 
+            /**
+             * checks for sin, cos, or tan trig functions, skips through the trig string then parses number inside
+             * parenthesis (does not handle equations inside parenthesis), then pushes result of trig
+             * function onto postfix stack
+             */
+            
+            else if (character === "s" || character === "c" || character === "t") {
+                i += 4;
+                if (character === "s") {
+                    character = "";
+                    while (this.state.input.charAt(i) === "." || (this.state.input.charAt(i) >= "0" && this.state.input.charAt(i) <= "9")) {
+                        character = character + this.state.input.charAt(i);
+                        i++;
+                    }
+                    postfixStack.push(Math.sin(character));
+                    console.log("test 1", character, Math.sin(character))
+                    i += 1;
+                } else if (character === "c") {
+                    character = "";
+                    while (this.state.input.charAt(i) === "." || (this.state.input.charAt(i) >= "0" && this.state.input.charAt(i) <= "9")) {
+                        character = character + this.state.input.charAt(i);
+                        i++;
+                    }
+                    postfixStack.push(Math.cos(character));
+                    i += 1;
+                } else if (character === "t") {
+                    character = "";
+                    while (this.state.input.charAt(i) === "." || (this.state.input.charAt(i) >= "0" && this.state.input.charAt(i) <= "9")) {
+                        character = character + this.state.input.charAt(i);
+                        i++;
+                    }
+                    postfixStack.push(Math.tan(character));
+                    i += 1;
+                }
             }
-        }
-        while (opStack.length > 0) {
-            postfixStack.push(opStack.pop());
-        }
-        console.log(postfixStack);
-    }
+            }
+            while (opStack.length > 0) {
+                postfixStack.push(opStack.pop());
+            }
+            console.log(postfixStack);
+            }
 
   render() {
     return (
@@ -200,7 +237,7 @@ export class Calculator extends Component {
         
          <div className="row">
           <div className="col">
-          <Button className="other" handleClick={this.trigFunction}>sin</Button>
+          <Button className="other" handleClick={this.addToInput}>sin</Button>
           </div>
           <div className="col">
           <Button className="numbers" handleClick={this.addToInput}>7</Button>
@@ -218,7 +255,7 @@ export class Calculator extends Component {
 
          <div className="row">
          <div className="col">
-          <Button className="other" handleClick={this.trigFunction}>cos</Button>
+          <Button className="other" handleClick={this.addToInput}>cos</Button>
           </div>
           <div className="col">
           <Button className="numbers" handleClick={this.addToInput}>4</Button>
@@ -235,7 +272,7 @@ export class Calculator extends Component {
         </div>
          <div className="row">
          <div className="col">
-          <Button className="other" handleClick={this.trigFunction}>tan</Button>
+          <Button className="other" handleClick={this.addToInput}>tan</Button>
           </div>
           <div className="col">
           <Button className="numbers" handleClick={this.addToInput}>1</Button>
