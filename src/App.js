@@ -10,7 +10,6 @@ class App extends Component {
           React Calculator App
         </header>
         <Calculator />
-
       </div>
     );
   }
