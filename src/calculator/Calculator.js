@@ -9,13 +9,24 @@ export class Calculator extends Component {
         prevNum: "",
         currentNum: "",
         operator: "-",
-        opStack: [],
-        postfixStack: [],
+        
     };
 
     addToInput = val => {
         // if (!isNaN(this.state.input) || this.state.input === ".") {
-            if (this.state.input === "0") {
+            if (val === "(") {
+                if (this.state.input[this.state.input.length-1] !== ")" && this.state.input[this.state.input.length-1] !== ".") {
+                    this.setState({
+                        input: this.state.input + val
+                    })
+                }
+            } else if (val === ")") {
+                if (this.state.input.indexOf("(") >= 0) {
+                    this.setState({
+                        input: this.state.input + val
+                    })
+                }
+            } else if (this.state.input == "0") {
                 this.setState({
                     input: val
                 })
@@ -35,12 +46,11 @@ export class Calculator extends Component {
         }
     }
     addDecimal = val => {
-        if (!isNaN(this.state.input)) {
-            if (this.state.input.indexOf(".") === -1) {
+        if ( this.state.input.charAt(this.state.input.length-1) !== "." && this.state.input.charAt(this.state.input.length-1) !== ")"  ) {
                 this.setState({
                     input: this.state.input + val
                 })
-            }
+            
         }
     }
 
@@ -50,114 +60,104 @@ export class Calculator extends Component {
         })
     }
 
-    // plusMinus = () => {
-    //     if (this.state.input > 0) {
-    //         this.setState({
-    //             input: -Math.abs(this.state.input)
-    //         })
-    //     } else if (this.state.input < 0) {
-    //         this.setState({
-    //             input: Math.abs(this.state.input)
-    //         })
-    //     }
-    // }
-
     trigFunction = val => {
-        if (!isNaN(this.state.input) || this.state.input === ".") {
+        // if (!isNaN(this.state.input)) {
+            this.compute();
+            console.log(this.state.input)
             if (val === "sin") {
                 this.setState({
-                    input: Math.sin(parseInt(this.state.input))
+                    input: Math.sin(this.state.input)
                 })
             } else if (val === "cos") {
                 this.setState({
-                    input: Math.cos(parseInt(this.state.input))
+                    input: Math.cos(parseFloat(this.state.input))
                 })
             } else if (val === "tan") {
                 this.setState({
-                    input: Math.tan(parseInt(this.state.input))
+                    input: Math.tan(parseFloat(this.state.input))
                 })
             }
-        }
+        // }
     }
 
-    // operate = val => {
-    //     if (!isNaN(this.state.input)) {
-    //         this.state.prevNum = this.state.input;
-    //         this.state.operator = val;
-    //         // this.setState({
-    //         //     input: ""
-    //         // });
-    //     }
-    // }
 
     compute = () => {
-        for (let i = 0; i < this.state.input.length; i++) {
-            let character = this.state.input.charAt(i);
-            if (character >= "0" && character <= "9") {
-                this.state.postfixStack.push(character);
-                console.log("postfix", this.state.postfixStack);
-            } else if (character === "(") {
-                this.state.opStack.push(character);
-            } else if (character === ")") {
-                while (this.state.opStack[this.state.opStack.length-1] !== "(" && this.state.opStack.length > 0) {
-                    this.state.postfixStack.push(this.state.opStack.pop());
+        let opStack = [];
+        let postfixStack = [];
+        let resultStack = [];
+        this.toPostfix(opStack, postfixStack);
+
+        while (postfixStack.length > 0) {
+            if (!isNaN(postfixStack[0])) {
+                resultStack.push(parseFloat(postfixStack.shift()))
+                console.log("resultstack", resultStack);
+            } else {
+                let op1 = resultStack.pop();
+                let op2 = resultStack.pop();
+                if (postfixStack[0] === "+") {
+                    resultStack.push(op2 + op1);
+                } else if (postfixStack[0] === "-") {
+                    resultStack.push(op2 - op1);
+                } else if (postfixStack[0] === "*") {
+                    resultStack.push(op2 * op1);
+                } else if (postfixStack[0] === "/") {
+                    resultStack.push(op2 / op1)
                 }
-                if (this.state.opStack[this.state.opStack.length-1] === "(") {
-                    this.state.opStack.pop();
+                postfixStack.shift();
+                console.log("answer", resultStack)
+
+            }
+        }
+        this.setState({
+            input: resultStack[0].toPrecision(12)
+        });
+    }
+
+    
+
+    toPostfix = (opStack, postfixStack) => {
+        for (let i = 0; i < this.state.input.length; i++) {
+            let character = "";
+           
+            if (this.state.input.charAt(i) === "." || (this.state.input.charAt(i) >= "0" && this.state.input.charAt(i) <= "9")) {
+                while (this.state.input.charAt(i) === "." || (this.state.input.charAt(i) >= "0" && this.state.input.charAt(i) <= "9")) {
+                    character = character + this.state.input.charAt(i);
+                    i++;
+                }
+                postfixStack.push(character);
+                console.log("postfix", postfixStack);
+            }
+            character = this.state.input.charAt(i);
+            if (character === "(") {
+                opStack.push(character);
+            } else if (character === ")") {
+                while (opStack[opStack.length-1] !== "(" && opStack.length > 0) {
+                    postfixStack.push(opStack.pop());
+                }
+                if (opStack[opStack.length-1] === "(") {
+                    opStack.pop();
                 }
             }
              else if (character === "+" || character === "-") {
-                while (this.state.opStack.length > 0 && this.state.opStack[this.state.opStack.length-1] !== "(") {
-                    this.state.postfixStack.push(this.state.opStack.pop())
+                while (opStack.length > 0 && opStack[opStack.length-1] !== "(") {
+                    postfixStack.push(opStack.pop())
                 }
-                this.state.opStack.push(character);
+                opStack.push(character);
             } else if (character === "*" || character === "/") {
-                if (this.state.opStack.length === 0 || this.state.opStack[this.state.opStack.length-1] === "+" || this.state.opStack[this.state.opStack.length-1] === "-" || this.state.opStack[this.state.opStack.length-1] === "(") {
-                    this.state.opStack.push(character);
+                if (opStack.length === 0 || opStack[opStack.length-1] === "+" || opStack[opStack.length-1] === "-" || opStack[opStack.length-1] === "(") {
+                    opStack.push(character);
                 } else {
-                    while (this.state.opStack.length > 0 && this.state.opStack[this.state.opStack.length-1] != "(") {
-                        this.state.postfixStack.push(this.state.opStack.pop())
+                    while (opStack.length > 0 && opStack[opStack.length-1] !== "(") {
+                        postfixStack.push(opStack.pop())
                     }
-                    this.state.opStack.push(character);
+                    opStack.push(character);
                 }
             }
-           
-            //     if (character === "*" || character === "/") {
-            //         while (this.state.opStack.length > 0 && this.state.opStack[this.state.opStack.length-1] ) {
-            //     }
-            //     while (this.state.opStack.length > 0) {
-            //      && (this.state.opStack[this.state.opStack.length-1] === "+" || this.state.opStack[this.state.opStack.length-1] === "-")) {
-            //         this.state.opStack.push(character);
-            //     } 
-            // }
-            // }
         }
-        while (this.state.opStack.length > 0) {
-            this.state.postfixStack.push(this.state.opStack.pop());
+        while (opStack.length > 0) {
+            postfixStack.push(opStack.pop());
         }
-        console.log(this.state.postfixStack);
-
-        // this.state.currentNum = this.state.input;
-        // if (this.state.operator === "+") {
-        //     this.setState({
-        //         input: parseInt(this.state.prevNum) + parseInt(this.state.currentNum),
-        //     })
-        // } else if (this.state.operator === "-") {
-        //     this.setState({
-        //         input: parseInt(this.state.prevNum) - parseInt(this.state.currentNum)
-        //     })
-
-        // } else if (this.state.operator === "*") {
-        //     this.setState({
-        //         input: parseInt(this.state.prevNum) * parseInt(this.state.currentNum)
-        //     })
-        // } else if (this.state.operator === "/") {
-        //     this.setState({
-        //         input: parseInt(this.state.prevNum) / parseInt(this.state.input)
-        //     })
-        // }
-        // console.log(this.state.prevNum, this.state.currentNum)
-
+        console.log(postfixStack);
     }
 
   render() {
